@@ -12,12 +12,18 @@
 % h.s{i,j} is the handle to the 'raindrops' (individual datapoints) from data{i,j}
 % h.m(i,j) is the handle to the single, large dot that represents mean(data{i,j})
 % h.l(i,j) is the handle for the line connecting h.m(i,j) and h.m(i+1,j)
+%
+%	-- Changes --
+%	2020-03-02 : m053m716 : Added option for first argument to be parent axes (similar to other Matlab graphics functions)
+%						  : * Additional `varargin` inputs can be used with the Matlab axes 'Name',value... pair syntax
 
 %% TO-DO:
 % Patch can create colour gradients using the 'interp' option to 'FaceColor'. Allow this?
 
-function h = rm_raincloud(data, colours, plot_top_to_bottom, density_type, bandwidth)
+function h = rm_raincloud(data, colours, plot_top_to_bottom, density_type, bandwidth,varargin)
 %% check dimensions of data
+
+
 
 [n_plots_per_series, n_series] = size(data);
 
@@ -37,6 +43,32 @@ end
 if nargin < 5
     bandwidth           = [];   % let the function specify the bandwidth
 end
+
+if isa(data,'matlab.graphics.axis.Axes')
+	ax = data;
+	% "Shift" the other input arguments accordingly
+	data = colours;
+	colours = plot_top_to_bottom;
+	if nargin > 3
+		plot_top_to_bottom = density_type;
+	end
+	
+	if nargin > 4
+		density_type = bandwidth;
+	end
+	
+	if nargin > 5
+		bandwidth = varargin{1};
+		varargin(1) = [];
+	end
+else
+	ax = gca;
+end
+% Set the axes property for 'NextPlot' as well as any optional axes settings we want
+for i = 1:2:numel(varargin)
+	ax.(varargin{i}) = varargin{i+1};
+end
+ax.NextPlot = 'add'; % Enforce this 
 
 %% Calculate properties of density plots
 
@@ -114,7 +146,7 @@ cell_means = cellfun(@mean, data);
 % note - we *could* plot everything here in one big loop, but then
 % different figure parts would overlay each other in a silly way.
 
-hold on
+% hold on % m053m716 2020-03-02: Changed this so axes property is set at beginning
 
 % patches
 for i = 1:n_plots_per_series
