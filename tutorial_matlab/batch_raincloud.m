@@ -41,9 +41,10 @@ function h = batch_raincloud(data,varargin)
 
 %% default arguments
 pars = struct;
-pars.density_granularity = 200;
+pars.nbins = 200;
 pars.raindrop_size = 100;
 pars.jitter_factor = 0.125;
+pars.raindrop_alpha = 0.5;
 pars.plot_top_to_bottom = 0;
 pars.density_type = 'ks';
 pars.bandwidth = [];
@@ -92,7 +93,7 @@ end
 ax.NextPlot = 'add'; % Enforce this
 
 %% Calculate properties of density plots
-n_bins = repmat(pars.density_granularity, n_plots_per_series, n_series);
+n_bins = repmat(pars.nbins, n_plots_per_series, n_series);
 
 % calculate kernel densities
 for i = 1:n_plots_per_series
@@ -193,7 +194,11 @@ for i = 1:n_plots_per_series
       
       if pars.plot_raindrop
          % scatter rainclouds
-         h.s{i, j} = scatter(ax,data{i, j}, -jit{i, j} + ks_offsets(i), 'MarkerFaceColor', pars.colours(j, :), 'MarkerEdgeColor', 'none', 'MarkerFaceAlpha', 0.5, 'SizeData', pars.raindrop_size);
+         h.s{i, j} = scatter(ax,data{i, j}, -jit{i, j} + ks_offsets(i), ...
+            'MarkerFaceColor', pars.colours(j, :), ...
+            'MarkerEdgeColor', 'none', ...
+            'MarkerFaceAlpha', pars.raindrop_alpha, ...
+            'SizeData', pars.raindrop_size);
       else
          h.s = [];
       end
@@ -274,7 +279,9 @@ if pars.plot_means
          if isempty(data{i,j})
             continue;
          end
-         h.m(i, j) = scatter(ax,cell_means(i, j), ks_offsets(i), 'MarkerFaceColor', pars.colours(j, :), 'MarkerEdgeColor', [0 0 0], 'MarkerFaceAlpha', 1, 'SizeData', pars.raindrop_size * 2, 'LineWidth', 2);
+         h.m(i, j) = scatter(ax,cell_means(i, j), ks_offsets(i), ...
+            'MarkerFaceColor', pars.colours(j, :), 'MarkerEdgeColor', [0 0 0], ...
+            'MarkerFaceAlpha', 1, 'SizeData', pars.raindrop_size * 2, 'LineWidth', 2);
          h.tmu(i, j) = text(ax,cell_means(i, j)+pars.text_x_offset, ks_offsets(i)+pars.text_y_offset,...
             sprintf(['\\mu = ' pars.text_num_format],cell_means(i,j)),...
             'FontName',pars.text_font,'FontSize',pars.text_fontsize,'Color','k','HorizontalAlignment',pars.text_align);
